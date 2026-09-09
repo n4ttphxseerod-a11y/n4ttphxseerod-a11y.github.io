@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Natt's 3D Portfolio</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Fredoka:wght@400;500;600;700&display=swap');
+
+:root{
+  --pink:#ffb7d5; --pink2:#ffd9e8; --blue:#b9ddff;
+  --yellow:#ffe99a; --mint:#bcebdc; --purple:#d9c7ff;
+  --ink:#514b60; --white:#fffaff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Kanit',sans-serif;color:var(--ink);background:#fff8fc;
+  overflow-x:hidden;
+}
+#scene{position:fixed;inset:0;z-index:-2}
+#scene canvas{display:block}
+.bg{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(circle at 15% 20%,rgba(255,183,213,.30),transparent 22%),
+    radial-gradient(circle at 85% 25%,rgba(185,221,255,.28),transparent 25%),
+    radial-gradient(circle at 70% 85%,rgba(217,199,255,.28),transparent 25%);
+}
+nav{
+  position:fixed;top:18px;left:50%;transform:translateX(-50%);
+  width:min(1100px,92%);padding:12px 18px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.72);backdrop-filter:blur(16px);
+  border:2px solid rgba(255,255,255,.9);border-radius:999px;
+  box-shadow:0 10px 35px rgba(111,84,120,.10);z-index:10;
+}
+.logo{font-family:'Fredoka';font-size:24px;color:#ee8fb8}
+.logo span{color:#9abfe8}
+nav ul{display:flex;gap:24px;list-style:none}
+nav a{text-decoration:none;color:var(--ink);font-size:14px;font-weight:500}
+nav a:hover{color:#e889b1}
+.hero{
+  min-height:100vh;padding:130px 8% 70px;display:flex;align-items:center;
+}
+.hero-inner{max-width:720px}
+.badge{
+  display:inline-block;padding:8px 16px;border-radius:999px;
+  background:#fff;border:2px solid var(--pink2);color:#d982a8;
+  font-size:13px;box-shadow:0 8px 25px rgba(230,140,180,.12)
+}
+h1{
+  font-family:'Fredoka';font-size:clamp(64px,11vw,125px);
+  line-height:.86;margin:22px 0 20px;color:#63586f;
+  letter-spacing:-3px;
+}
+h1 .name{color:#ee91b8}
+.hero p{font-size:18px;line-height:1.8;color:#756d80;max-width:610px}
+.buttons{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}
+.btn{
+  display:inline-block;text-decoration:none;padding:12px 22px;border-radius:999px;
+  font-weight:500;transition:.25s;border:2px solid transparent;
+}
+.primary{background:var(--pink);color:#fff;box-shadow:0 9px 22px rgba(236,139,179,.25)}
+.secondary{background:#fff;color:#756d80;border-color:#f0dce7}
+.btn:hover{transform:translateY(-4px)}
+section{padding:100px 8%;position:relative}
+.section-head{margin-bottom:40px}
+.kicker{font-family:'Fredoka';color:#d989ad;letter-spacing:2px;font-size:14px}
+h2{font-family:'Fredoka';font-size:clamp(38px,6vw,65px);color:#62576f;margin-top:5px}
+.about-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:35px}
+.card{
+  background:rgba(255,255,255,.78);border:2px solid #fff;
+  border-radius:28px;padding:32px;box-shadow:0 18px 50px rgba(102,78,115,.10);
+  backdrop-filter:blur(12px)
+}
+.about-text{font-size:17px;line-height:2;color:#766e7e}
+.info{display:grid;gap:0}
+.info-row{display:flex;justify-content:space-between;gap:20px;padding:15px 0;border-bottom:1px dashed #eadce6}
+.info-row:last-child{border:0}.label{color:#a197a5}.value{text-align:right;font-weight:500}
+.skills{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.skill{
+  padding:25px 20px;min-height:180px;border-radius:25px;
+  border:2px solid #fff;background:rgba(255,255,255,.76);
+  box-shadow:0 15px 35px rgba(102,78,115,.08);transition:.3s
+}
+.skill:hover{transform:translateY(-8px) rotate(-1deg)}
+.icon{font-size:38px;margin-bottom:30px}.skill h3{font-family:'Fredoka';font-size:22px}.skill p{font-size:13px;color:#918793;margin-top:5px}
+.projects{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+.project{
+  min-height:300px;padding:28px;border-radius:30px;position:relative;overflow:hidden;
+  border:2px solid #fff;box-shadow:0 18px 45px rgba(102,78,115,.09);
+}
+.project:nth-child(1){background:linear-gradient(135deg,#fff0f6,#ffe0eb)}
+.project:nth-child(2){background:linear-gradient(135deg,#eef7ff,#dcedff)}
+.project:nth-child(3){background:linear-gradient(135deg,#f2fff9,#dff7ed)}
+.project:nth-child(4){background:linear-gradient(135deg,#f7f1ff,#e9dcff)}
+.project .num{font-family:'Fredoka';font-size:65px;color:rgba(90,75,105,.10);position:absolute;right:20px;top:8px}
+.project .tag{color:#b17a99;font-size:12px;font-weight:600;letter-spacing:1px}
+.project h3{font-family:'Fredoka';font-size:30px;margin-top:55px}
+.project p{color:#817887;max-width:380px;margin-top:7px}
+.project .bubble{
+  position:absolute;width:130px;height:130px;border-radius:50%;right:-25px;bottom:-30px;
+  background:rgba(255,255,255,.45);box-shadow:inset 0 0 0 10px rgba(255,255,255,.25)
+}
+.contact{text-align:center;min-height:65vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.contact p{max-width:570px;line-height:1.9;color:#827887;margin:15px 0 25px}
+footer{text-align:center;padding:28px;color:#a69ba9;font-size:13px;border-top:1px solid #f0e3eb;background:rgba(255,255,255,.55)}
+@media(max-width:900px){
+  nav ul{display:none}.hero{padding-left:7%;padding-right:7%}
+  section{padding-left:7%;padding-right:7%}.about-grid{grid-template-columns:1fr}
+  .skills{grid-template-columns:repeat(2,1fr)}.projects{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  h1{font-size:65px}.skills{grid-template-columns:1fr}
+  .info-row{flex-direction:column}.value{text-align:left}
+}
+</style>
+</head>
+<body>
+
+<div id="scene"></div><div class="bg"></div>
+
+<nav>
+  <div class="logo">Natt<span>✦</span></div>
+  <ul>
+    <li><a href="#home">HOME</a></li><li><a href="#about">ABOUT</a></li>
+    <li><a href="#skills">SKILLS</a></li><li><a href="#projects">PROJECTS</a></li>
+    <li><a href="#contact">CONTACT</a></li>
+  </ul>
+</nav>
+
+<section class="hero" id="home">
+  <div class="hero-inner">
+    <div class="badge">✦ 3D ARTIST · GAME & ANIMATION</div>
+    <h1>Hello,<br>I'm <span class="name">Natt!</span></h1>
+    <p>
+      สวัสดีค่ะ ฉันชื่อ <b>แน็ต ภาษีรอด</b> นักศึกษาการออกแบบสื่อดิจิทัล
+      ที่ชอบสร้างสรรค์งาน 3D เกม แอนิเมชัน และคอนเทนต์ดิจิทัล
+    </p>
+    <div class="buttons">
+      <a class="btn primary" href="#projects">ดูผลงานของฉัน ✦</a>
+      <a class="btn secondary" href="#about">เกี่ยวกับฉัน</a>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="section-head"><div class="kicker">01 · ABOUT ME</div><h2>รู้จักแน็ตกัน ♡</h2></div>
+  <div class="about-grid">
+    <div class="card about-text">
+      <p>
+        ฉันเป็นนักศึกษาระดับปริญญาตรี สาขาการออกแบบสื่อดิจิทัล
+        วิชาเอกเกมและแอนิเมชัน มีความสนใจในการสร้างสรรค์งานภาพ
+        การออกแบบตัวละครและสภาพแวดล้อม รวมถึงการพัฒนาเกมและสื่อ Interactive
+      </p><br>
+      <p>
+        ฉันสนุกกับการเปลี่ยนไอเดียให้กลายเป็นผลงานที่มองเห็นและเล่นได้
+        ตั้งแต่การวาดภาพ ออกแบบ ไปจนถึงการสร้างโมเดล 3D และนำไปใช้งานใน Unity
+      </p>
+    </div>
+    <div class="card info">
+      <div class="info-row"><span class="label">ชื่อ</span><span class="value">นางสาว แน็ต ภาษีรอด</span></div>
+      <div class="info-row"><span class="label">ชื่อเล่น</span><span class="value">แน็ต</span></div>
+      <div class="info-row"><span class="label">อายุ</span><span class="value">23 ปี</span></div>
+      <div class="info-row"><span class="label">ระดับการศึกษา</span><span class="value">ปริญญาตรี</span></div>
+      <div class="info-row"><span class="label">คณะ</span><span class="value">สถาปัตยกรรมศาสตร์และการออกแบบ</span></div>
+      <div class="info-row"><span class="label">สาขา</span><span class="value">การออกแบบสื่อดิจิทัล</span></div>
+      <div class="info-row"><span class="label">วิชาเอก</span><span class="value">เกมและแอนิเมชัน</span></div>
+      <div class="info-row"><span class="label">มหาวิทยาลัย</span><span class="value">มทร.รัตนโกสินทร์ วิทยาเขตศาลายา</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="skills">
+  <div class="section-head"><div class="kicker">02 · MY SKILLS</div><h2>สิ่งที่ฉันทำได้ ✨</h2></div>
+  <div class="skills">
+    <div class="skill"><div class="icon">🧊</div><h3>Maya</h3><p>3D Modeling · Animation</p></div>
+    <div class="skill"><div class="icon">🎮</div><h3>Unity</h3><p>Game Development</p></div>
+    <div class="skill"><div class="icon">🪄</div><h3>ZBrush</h3><p>Digital Sculpting</p></div>
+    <div class="skill"><div class="icon">🎨</div><h3>Design</h3><p>Visual · Drawing · Concept</p></div>
+    <div class="skill"><div class="icon">📱</div><h3>Content</h3><p>Content Creator</p></div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="section-head"><div class="kicker">03 · SELECTED WORK</div><h2>ผลงานของฉัน 🌷</h2></div>
+  <div class="projects">
+    <div class="project"><div class="num">01</div><div class="tag">3D GAME DESIGN</div><h3>Solar System</h3><p>เกม 3D เพื่อการเรียนรู้และสำรวจระบบสุริยะสำหรับเด็ก</p><div class="bubble"></div></div>
+    <div class="project"><div class="num">02</div><div class="tag">3D MODELING</div><h3>3D Assets</h3><p>การสร้างโมเดล 3D และ Asset สำหรับงานเกมและสื่อดิจิทัล</p><div class="bubble"></div></div>
+    <div class="project"><div class="num">03</div><div class="tag">ANIMATION</div><h3>Animation</h3><p>งาน Animation และการเล่าเรื่องผ่านภาพและการเคลื่อนไหว</p><div class="bubble"></div></div>
+    <div class="project"><div class="num">04</div><div class="tag">DIGITAL CONTENT</div><h3>Creative Content</h3><p>การออกแบบและสร้างสรรค์ Content สำหรับ Social Media</p><div class="bubble"></div></div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <div class="kicker">04 · CONTACT</div>
+  <h2>Let's Create<br>Something Cute! ♡</h2>
+  <p>ขอบคุณที่เข้ามาชม Portfolio ของแน็ต<br>ยินดีที่ได้รู้จักและได้สร้างสรรค์ผลงานดี ๆ ไปด้วยกัน</p>
+  <div class="buttons"><a class="btn primary" href="#home">กลับไปด้านบน ↑</a></div>
+</section>
+
+<footer>© 2026 Natt Phasirod · 3D Artist / Game & Animation</footer>
+
+<script>
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, .1, 100);
+camera.position.set(0,0,7);
+
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputEncoding = THREE.sRGBEncoding;
+document.getElementById('scene').appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0xffffff,1.5));
+
+const light1 = new THREE.PointLight(0xffb7d5,8,20);
+light1.position.set(4,3,5); scene.add(light1);
+const light2 = new THREE.PointLight(0xb9ddff,7,20);
+light2.position.set(-4,-2,4); scene.add(light2);
+
+const group = new THREE.Group();
+scene.add(group);
+
+/* Cute pastel 3D centerpiece */
+const torus = new THREE.Mesh(
+  new THREE.TorusKnotGeometry(1.25,.24,100,16),
+  new THREE.MeshStandardMaterial({color:0xffb7d5,roughness:.3,metalness:.15})
+);
+group.add(torus);
+
+const ring = new THREE.Mesh(
+  new THREE.TorusGeometry(1.8,.025,16,100),
+  new THREE.MeshBasicMaterial({color:0xb9ddff,transparent:true,opacity:.7})
+);
+group.add(ring);
+
+const starsGeo = new THREE.BufferGeometry();
+const count = 700;
+const pos = new Float32Array(count*3);
+for(let i=0;i<count*3;i++) pos[i]=(Math.random()-.5)*24;
+starsGeo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+const stars = new THREE.Points(
+  starsGeo,
+  new THREE.PointsMaterial({color:0xffffff,size:.035,transparent:true,opacity:.8})
+);
+scene.add(stars);
+
+let mx=0,my=0,scroll=0;
+addEventListener('mousemove',e=>{
+  mx=e.clientX/innerWidth-.5; my=e.clientY/innerHeight-.5;
+});
+addEventListener('scroll',()=>scroll=scrollY);
+
+function animate(){
+  requestAnimationFrame(animate);
+  torus.rotation.x += .003;
+  torus.rotation.y += .007;
+  ring.rotation.z -= .002;
+  group.rotation.y += (mx*.35-group.rotation.y)*.03;
+  group.rotation.x += (-my*.2-group.rotation.x)*.03;
+  group.position.y = Math.sin(Date.now()*.001)*.12 - scroll/innerHeight*.12;
+  stars.rotation.y += .00015;
+  renderer.render(scene,camera);
+}
+animate();
+
+addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+</body>
+</html>
