@@ -1,28 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.4/dist/aframe-extras.min.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Cat Face AR</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
+    #container { position: fixed; inset: 0; }
+  </style>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.136.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.136.0/examples/jsm/",
+      "mindar-face-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-three.prod.js"
+    }
+  }
+  </script>
 </head>
-
 <body>
-<a-scene
-  mindar-image="imageTargetSrc: https://n4ttphxseerod-a11y.github.io/targets.mind;"
-  vr-mode-ui="enabled: false"
-  device-orientation-permission-ui="enabled: false">
+  <div id="container"></div>
 
-  <a-assets>
-    <a-asset-item id="model0" src="https://aitutorialcourse.github.io/epona.glb"></a-asset-item>
-  </a-assets>
+  <script type="module">
+    import * as THREE from 'three';
+    import { MindARThree } from 'mindar-face-three';
 
-  <!-- Target 1 -->
-  <a-entity mindar-image-target="targetIndex: 0">
-    <a-gltf-model src="#model0" animation-mixer rotation="90 0 0" scale="2 2 2"></a-gltf-model>
-  </a-entity>
+    // ไฟล์ face_texture_cat_fit.png ต้องอยู่โฟลเดอร์เดียวกับ mindar.html
+    const TEXTURE_URL = 'face_texture_cat_fit.png';
 
-  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    const start = async () => {
+      const mindarThree = new MindARThree({
+        container: document.querySelector('#container')
+      });
+      const { renderer, scene, camera } = mindarThree;
 
-</a-scene>
+      scene.add(new THREE.AmbientLight(0xffffff, 1));
+
+      const texture = await new THREE.TextureLoader().loadAsync(TEXTURE_URL);
+      if (THREE.sRGBEncoding !== undefined) texture.encoding = THREE.sRGBEncoding;
+
+      const faceMesh = mindarThree.addFaceMesh();
+      faceMesh.material.map = texture;
+      faceMesh.material.transparent = true;
+      faceMesh.material.needsUpdate = true;
+      scene.add(faceMesh);
+
+      await mindarThree.start();
+      renderer.setAnimationLoop(() => renderer.render(scene, camera));
+    };
+
+    start().catch((e) => {
+      console.error(e);
+      alert('เริ่มไม่ได้: ' + e.message);
+    });
+  </script>
 </body>
 </html>
