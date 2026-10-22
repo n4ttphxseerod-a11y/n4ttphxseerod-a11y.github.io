@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Face Mesh Texture - Black Cat</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.136.0/build/three.module.js",
+        "mindar-face-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-three.prod.js"
+      }
+    }
+  </script>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+    #container { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+  </style>
+</head>
+
+<body>
+  <div id="container"></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { MindARThree } from 'mindar-face-three';
+
+    const start = async () => {
+      const mindarThree = new MindARThree({
+        container: document.querySelector('#container'),
+      });
+      const { renderer, scene, camera } = mindarThree;
+
+      // เมชใบหน้า + เท็กซ์เจอร์แมวดำ
+      const faceMesh = mindarThree.addFaceMesh();
+      // ใช้ลิงก์เต็ม เพื่อให้หน้านี้วางไว้บัญชีไหนก็ดึงภาพจาก repo เดิมได้
+      const loader = new THREE.TextureLoader();
+      loader.setCrossOrigin('anonymous');
+      const texture = loader.load('https://n4ttphxseerod-a11y.github.io/face_texture_cat_fit.png');
+      faceMesh.material.map = texture;
+      faceMesh.material.transparent = true;
+      faceMesh.material.needsUpdate = true;
+      scene.add(faceMesh);
+
+      await mindarThree.start();
+      renderer.setAnimationLoop(() => {
+        renderer.render(scene, camera);
+      });
+    };
+
+    start();
+  </script>
+</body>
+</html>
