@@ -5,149 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>MindAR</title>
 
-  <!-- A-Frame 1.5.0 = เวอร์ชันที่ MindAR 1.2.5 ใช้ใน doc อย่างเป็นทางการ -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <!-- aframe-extras = ตัวที่ให้ animation-mixer (เล่นอนิเมชันใน .glb) -->
   <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
 
   <style>
     body { margin: 0; overflow: hidden; }
-    #dbg {
-      position: fixed; left: 0; right: 0; bottom: 0;
-      max-height: 42vh; overflow-y: auto;
-      background: rgba(0,0,0,.82); color: #0f0;
-      font: 12px/1.45 ui-monospace, Menlo, Consolas, monospace;
-      padding: 8px 10px; z-index: 99999; white-space: pre-wrap;
-    }
-    #dbg .err { color: #ff5f5f; }
-    #dbg .ok  { color: #6cf; }
-    #dbgClose {
-      position: fixed; right: 8px; bottom: calc(42vh + 6px);
-      z-index: 100000; background: #fff; border: 0; border-radius: 6px;
-      padding: 6px 12px; font-size: 13px;
-    }
   </style>
 </head>
 
 <body>
 
-<!-- ===== แผง DEBUG : ลบ div/button/script ชุดนี้ทิ้งได้เมื่อใช้งานจริง ===== -->
-<div id="dbg">กำลังเริ่ม…</div>
-<button id="dbgClose">ซ่อน log</button>
-<script>
-(function () {
-  var box = document.getElementById('dbg');
-  var t0 = Date.now();
-  function log(msg, cls) {
-    var line = document.createElement('div');
-    if (cls) line.className = cls;
-    line.textContent = '[' + ((Date.now() - t0) / 1000).toFixed(1) + 's] ' + msg;
-    box.appendChild(line);
-    box.scrollTop = box.scrollHeight;
-  }
-  window.__log = log;
-  box.textContent = '';
-  log('เริ่มโหลดหน้า');
-
-  document.getElementById('dbgClose').onclick = function () {
-    box.style.display = box.style.display === 'none' ? 'block' : 'none';
-  };
-
-  window.addEventListener('error', function (e) {
-    log('JS ERROR: ' + (e.message || e.type) + ' @ ' + (e.filename || '?'), 'err');
-  }, true);
-  window.addEventListener('unhandledrejection', function (e) {
-    log('PROMISE ERROR: ' + (e.reason && (e.reason.message || e.reason)), 'err');
-  });
-
-  // เช็กว่าไฟล์ .mind และ .glb โหลดได้จริงไหม
-  function check(url) {
-    fetch(url, { cache: 'no-store' })
-      .then(function (r) {
-        if (!r.ok) { log('โหลดไม่ได้ ' + r.status + ' → ' + url, 'err'); return null; }
-        return r.arrayBuffer().then(function (b) {
-          log('OK ' + (b.byteLength / 1024).toFixed(0) + ' KB → ' + url, 'ok');
-        });
-      })
-      .catch(function (err) { log('FETCH FAIL ' + url + ' : ' + err.message, 'err'); });
-  }
-  window.__check = check;
-
-  log('ไม่ใช่ https หรือเปล่า? protocol = ' + location.protocol +
-      (location.protocol === 'https:' ? ' (ok)' : ' (กล้องจะไม่ทำงาน!)'));
-})();
-</script>
-<!-- ===== จบแผง DEBUG ===== -->
-
-
 <a-scene
-  mindar-image="imageTargetSrc: targets-3.mind; uiLoading: yes; uiScanning: yes; filterMinCF: 0.0001; filterBeta: 0.001"
+  mindar-image="imageTargetSrc: targets.mind; uiLoading: yes; uiScanning: yes; filterMinCF: 0.0001; filterBeta: 0.001"
   color-space="sRGB"
   renderer="colorManagement: true, physicallyCorrectLights"
   vr-mode-ui="enabled: false"
   device-orientation-permission-ui="enabled: false">
 
-  <!-- timeout กัน A-Frame ค้างถ้ามีไฟล์ไหนโหลดไม่ขึ้น -->
   <a-assets timeout="30000">
     <a-asset-item id="model0" src="natt.glb"></a-asset-item>
-    <a-asset-item id="model1" src="alien_monster.glb"></a-asset-item>
-    <a-asset-item id="model2" src="natt.glb"></a-asset-item>
   </a-assets>
 
-  <!-- แสง: ถ้าไม่ใส่ โมเดลบางตัวจะออกมาดำสนิท -->
   <a-entity light="type: ambient; intensity: 1.2"></a-entity>
   <a-entity light="type: directional; intensity: 1" position="1 2 1"></a-entity>
 
-  <!-- Target 1 -->
   <a-entity mindar-image-target="targetIndex: 0">
     <a-gltf-model src="#model0" animation-mixer rotation="90 0 0" scale="2 2 2" position="0 0 0"></a-gltf-model>
   </a-entity>
 
-  <!-- Target 2 -->
-  <a-entity mindar-image-target="targetIndex: 1">
-    <a-gltf-model src="#model1" animation-mixer rotation="90 0 0" scale="2 2 2" position="0 0 0"></a-gltf-model>
-  </a-entity>
-
-  <!-- Target 3 -->
-  <a-entity mindar-image-target="targetIndex: 2">
-    <a-gltf-model src="#model2" animation-mixer rotation="90 0 0" scale="2 2 2" position="0 0 0"></a-gltf-model>
-  </a-entity>
-
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 </a-scene>
-
-
-<!-- ===== DEBUG ส่วนที่ต้องรอ a-scene : ลบทิ้งได้เมื่อใช้งานจริง ===== -->
-<script>
-(function () {
-  var log = window.__log, check = window.__check;
-  var scene = document.querySelector('a-scene');
-
-  check('targets-3.mind');
-  check('natt.glb');
-  check('alien_monster.glb');
-
-  scene.addEventListener('loaded',  function () { log('a-scene loaded (asset ครบแล้ว)', 'ok'); });
-  scene.addEventListener('arReady', function () { log('arReady → AR พร้อมใช้งาน สปินเนอร์ควรหายแล้ว', 'ok'); });
-  scene.addEventListener('arError', function (e) { log('arError: ' + JSON.stringify(e.detail || {}), 'err'); });
-
-  document.querySelectorAll('a-gltf-model').forEach(function (el, i) {
-    el.addEventListener('model-loaded', function () { log('โมเดล #' + i + ' โหลดสำเร็จ', 'ok'); });
-    el.addEventListener('model-error',  function (e) { log('โมเดล #' + i + ' ERROR: ' + (e.detail && e.detail.src), 'err'); });
-  });
-
-  document.querySelectorAll('[mindar-image-target]').forEach(function (el, i) {
-    el.addEventListener('targetFound', function () { log('เจอ target ' + i, 'ok'); });
-    el.addEventListener('targetLost',  function () { log('หลุด target ' + i); });
-  });
-
-  setTimeout(function () {
-    if (!scene.hasLoaded) log('⚠ 15 วิแล้ว scene ยังไม่ loaded → ติดที่ไฟล์ asset', 'err');
-  }, 15000);
-})();
-</script>
-<!-- ===== จบ DEBUG ===== -->
 
 </body>
 </html>
