@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Cat Face AR</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
+    #container { position: fixed; inset: 0; }
+    #status {
+      position: fixed; left: 8px; right: 8px; top: 8px; z-index: 20;
+      padding: 8px 12px; border-radius: 8px; font: 14px/1.4 sans-serif;
+      color: #fff; background: rgba(0,0,0,.55); pointer-events: none;
+    }
+    #status.err { background: rgba(200,0,0,.8); }
+  </style>
+  <script>
+    // เช็กว่าเบราว์เซอร์รองรับ import map ไหม (iOS Safari ต่ำกว่า 16.4 ไม่รองรับ)
+    window.__importMapOK = HTMLScriptElement.supports && HTMLScriptElement.supports('importmap');
+  </script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.136.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.136.0/examples/jsm/",
+      "mindar-face-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-three.prod.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="container"></div>
+  <div id="status">กำลังโหลด...</div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { MindARThree } from 'mindar-face-three';
+
+    const statusEl = document.getElementById('status');
+    const say = (t, err) => { statusEl.textContent = t; statusEl.className = err ? 'err' : ''; };
+
+    // ไฟล์ลายต้องอยู่โฟลเดอร์เดียวกับหน้านี้
+    const TEXTURE_URL = 'face_texture_cat_fit.png?v=' + Date.now();
+
+    const start = async () => {
+      say('กำลังโหลดลาย...');
+      const texture = await new THREE.TextureLoader().loadAsync(TEXTURE_URL);
+      if (THREE.sRGBEncoding !== undefined) texture.encoding = THREE.sRGBEncoding;
+
+      say('กำลังเปิดกล้อง... กดอนุญาตกล้องหน้า');
+      const mindarThree = new MindARThree({
+        container: document.querySelector('#container')
+      });
+      const { renderer, scene, camera } = mindarThree;
+
+      scene.add(new THREE.AmbientLight(0xffffff, 1));
+
+      const faceMesh = mindarThree.addFaceMesh();
+      faceMesh.material.map = texture;
+      faceMesh.material.transparent = true;
+      faceMesh.material.needsUpdate = true;
+      scene.add(faceMesh);
+
+      await mindarThree.start();
+      renderer.setAnimationLoop(() => renderer.render(scene, camera));
+      say('ส่องหน้าให้อยู่กลางจอ');
+      setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+    };
+
+    start().catch((e) => {
+      console.error(e);
+      say('เริ่มไม่ได้: ' + (e && e.message ? e.message : e), true);
+    });
+  </script>
+
+  <script>
+    if (!window.__importMapOK) {
+      var s = document.getElementById('status');
+      s.textContent = 'เบราว์เซอร์นี้เก่าเกินไป (ไม่รองรับ import map) ให้อัปเดต iOS เป็น 16.4 ขึ้นไป หรือเปิดด้วย Chrome';
+      s.className = 'err';
+    }
+  </script>
+</body>
+</html>
