@@ -17,7 +17,7 @@
 <body>
 
 <a-scene
-  mindar-image="imageTargetSrc: https://aitutorialcourse.github.io/targets-3.mind; maxTrack: 3; uiLoading: yes; uiScanning: yes; filterMinCF: 0.0001; filterBeta: 0.001"
+  mindar-image="imageTargetSrc: targets-3.mind; maxTrack: 3; uiLoading: yes; uiScanning: yes; filterMinCF: 0.0001; filterBeta: 0.001"
   color-space="sRGB"
   renderer="colorManagement: true, physicallyCorrectLights"
   vr-mode-ui="enabled: false"
@@ -32,17 +32,17 @@
   <a-entity light="type: ambient; intensity: 1.2"></a-entity>
   <a-entity light="type: directional; intensity: 1" position="1 2 1"></a-entity>
 
-  <!-- Target 1 -->
+  <!-- รูปการ์ดสาวผมขาว -->
   <a-entity mindar-image-target="targetIndex: 0">
     <a-gltf-model src="#model0" animation-mixer rotation="90 0 0" scale="0.5 0.5 0.5" position="0 0 0"></a-gltf-model>
   </a-entity>
 
-  <!-- Target 2 -->
+  <!-- รูปแมวดำ -->
   <a-entity mindar-image-target="targetIndex: 1">
     <a-gltf-model src="#model1" animation-mixer rotation="90 0 0" scale="2 2 2" position="0 0 0"></a-gltf-model>
   </a-entity>
 
-  <!-- Target 3 -->
+  <!-- รูปกระต่ายชมพู -->
   <a-entity mindar-image-target="targetIndex: 2">
     <a-gltf-model src="#model2" animation-mixer rotation="90 0 0" scale="0.5 0.5 0.5" position="0 0 0"></a-gltf-model>
   </a-entity>
