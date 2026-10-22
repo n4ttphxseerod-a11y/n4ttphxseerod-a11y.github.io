@@ -1,95 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Face Mesh Texture - Black Cat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Face Texture</title>
 
-  <!-- ช่วยให้เบราว์เซอร์รุ่นเก่าที่ไม่รองรับ importmap ใช้งานได้ -->
-  <script async src="https://unpkg.com/es-module-shims@1.8.3/dist/es-module-shims.js"></script>
-
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.136.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.136.0/examples/jsm/",
-        "mindar-face-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-three.prod.js"
-      }
-    }
-  </script>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-aframe.prod.js"></script>
 
   <style>
-    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
-    #container { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
-    #status {
-      position: fixed; left: 8px; right: 8px; top: 8px; z-index: 10;
-      color: #fff; font: 14px/1.4 sans-serif; background: rgba(0,0,0,.6);
-      padding: 8px 10px; border-radius: 8px; white-space: pre-wrap; word-break: break-word;
-    }
-    #status.err { background: rgba(180,0,0,.85); }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+    a-scene { width: 100%; height: 100%; }
   </style>
+
+  <script>
+    // คอมโพเนนต์แปะเท็กซ์เจอร์ลงบนโครงหน้า (MindAR ฝั่ง A-Frame ไม่มีมาให้)
+    AFRAME.registerComponent('face-texture', {
+      schema: { src: { type: 'string' } },
+
+      init: function () {
+        this.el.object3D.matrixAutoUpdate = false;
+        this.el.sceneEl.systems['mindar-face-system'].registerFaceMesh(this);
+      },
+
+      // MindAR ส่งโครงหน้ามาให้ตอนเริ่มทำงาน
+      addFaceMesh: function (faceGeometry) {
+        var texture = new THREE.TextureLoader().load(this.data.src);
+        try { texture.colorSpace = THREE.SRGBColorSpace; } catch (e) {}
+        var material = new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true
+        });
+        this.el.setObject3D('mesh', new THREE.Mesh(faceGeometry, material));
+      },
+
+      updateVisibility: function (visible) {
+        this.el.object3D.visible = visible;
+      },
+
+      updateMatrix: function (matrix) {
+        this.el.object3D.matrix.set.apply(this.el.object3D.matrix, matrix);
+      }
+    });
+  </script>
 </head>
 
 <body>
-  <div id="container"></div>
-  <div id="status">กำลังโหลด...</div>
 
-  <script>
-    // แสดง error ที่เกิดขึ้นบนหน้าจอ เพื่อดูสาเหตุได้ง่าย
-    const statusEl = document.getElementById('status');
-    function setStatus(msg, isErr) {
-      statusEl.textContent = msg;
-      statusEl.className = isErr ? 'err' : '';
-    }
-    window.addEventListener('error', (e) => setStatus('Error: ' + (e.message || e.type), true));
-    window.addEventListener('unhandledrejection', (e) => {
-      setStatus('Error: ' + (e.reason && (e.reason.message || e.reason)), true);
-    });
-  </script>
+<a-scene
+  mindar-face="faceOccluder: false; uiLoading: yes; uiScanning: yes"
+  embedded
+  color-space="sRGB"
+  renderer="colorManagement: true"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false">
 
-  <script type="module">
-    const start = async () => {
-      try {
-        setStatus('1/4 โหลดไลบรารี...');
-        const THREE = await import('three');
-        const { MindARThree } = await import('mindar-face-three');
+  <!-- โครงหน้า + เท็กซ์เจอร์ที่สร้างเอง -->
+  <a-entity face-texture="src: face_texture_cat_fit.png"></a-entity>
 
-        setStatus('2/4 สร้างฉาก...');
-        const mindarThree = new MindARThree({
-          container: document.querySelector('#container'),
-        });
-        const { renderer, scene, camera } = mindarThree;
+  <a-camera active="false" position="0 0 0"></a-camera>
+</a-scene>
 
-        const faceMesh = mindarThree.addFaceMesh();
-        const loader = new THREE.TextureLoader();
-        loader.setCrossOrigin('anonymous');
-        const texture = loader.load(
-          'https://n4ttphxseerod-a11y.github.io/face_texture_cat_fit.png',
-          () => {},
-          undefined,
-          () => setStatus('โหลดภาพ face_texture_cat_fit.png ไม่สำเร็จ', true)
-        );
-        faceMesh.material.map = texture;
-        faceMesh.material.transparent = true;
-        faceMesh.material.needsUpdate = true;
-        scene.add(faceMesh);
-
-        setStatus('3/4 กำลังขอใช้กล้อง... กรุณากด Allow');
-        await mindarThree.start();
-
-        setStatus('4/4 เปิดกล้องแล้ว หันหน้าเข้าหากล้อง');
-        setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
-
-        renderer.setAnimationLoop(() => {
-          renderer.render(scene, camera);
-        });
-      } catch (err) {
-        setStatus('Error: ' + (err && (err.message || err)), true);
-        console.error(err);
-      }
-    };
-
-    start();
-  </script>
 </body>
 </html>
