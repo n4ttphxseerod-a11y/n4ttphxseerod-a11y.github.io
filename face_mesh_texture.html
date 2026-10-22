@@ -4,10 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Face Mesh Texture - Black Cat</title>
-
-  <!-- ช่วยให้เบราว์เซอร์รุ่นเก่าที่ไม่รองรับ importmap ใช้งานได้ -->
-  <script async src="https://unpkg.com/es-module-shims@1.8.3/dist/es-module-shims.js"></script>
-
   <script type="importmap">
     {
       "imports": {
@@ -16,76 +12,40 @@
       }
     }
   </script>
-
   <style>
     html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
     #container { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
-    #status {
-      position: fixed; left: 8px; right: 8px; top: 8px; z-index: 10;
-      color: #fff; font: 14px/1.4 sans-serif; background: rgba(0,0,0,.6);
-      padding: 8px 10px; border-radius: 8px; white-space: pre-wrap; word-break: break-word;
-    }
-    #status.err { background: rgba(180,0,0,.85); }
   </style>
 </head>
 
 <body>
   <div id="container"></div>
-  <div id="status">กำลังโหลด...</div>
-
-  <script>
-    // แสดง error ที่เกิดขึ้นบนหน้าจอ เพื่อดูสาเหตุได้ง่าย
-    const statusEl = document.getElementById('status');
-    function setStatus(msg, isErr) {
-      statusEl.textContent = msg;
-      statusEl.className = isErr ? 'err' : '';
-    }
-    window.addEventListener('error', (e) => setStatus('Error: ' + (e.message || e.type), true));
-    window.addEventListener('unhandledrejection', (e) => {
-      setStatus('Error: ' + (e.reason && (e.reason.message || e.reason)), true);
-    });
-  </script>
 
   <script type="module">
+    import * as THREE from 'three';
+    import { MindARThree } from 'mindar-face-three';
+
     const start = async () => {
-      try {
-        setStatus('1/4 โหลดไลบรารี...');
-        const THREE = await import('three');
-        const { MindARThree } = await import('mindar-face-three');
+      const mindarThree = new MindARThree({
+        container: document.querySelector('#container'),
+      });
+      const { renderer, scene, camera } = mindarThree;
 
-        setStatus('2/4 สร้างฉาก...');
-        const mindarThree = new MindARThree({
-          container: document.querySelector('#container'),
-        });
-        const { renderer, scene, camera } = mindarThree;
+      // เมชใบหน้า + เท็กซ์เจอร์แมวดำ
+      const faceMesh = mindarThree.addFaceMesh();
+      // ใช้ลิงก์เต็ม เพื่อให้หน้านี้วางไว้บัญชีไหนก็ดึงภาพจาก repo เดิมได้
+      const loader = new THREE.TextureLoader();
+      loader.setCrossOrigin('anonymous');
+      const texture = loader.load('https://n4ttphxseerod-a11y.github.io/face_texture_cat_fit.png');
+      faceMesh.material.map = texture;
+      faceMesh.material.transparent = true;
+      faceMesh.material.needsUpdate = true;
+      scene.add(faceMesh);
 
-        const faceMesh = mindarThree.addFaceMesh();
-        const loader = new THREE.TextureLoader();
-        loader.setCrossOrigin('anonymous');
-        const texture = loader.load(
-          'https://n4ttphxseerod-a11y.github.io/face_texture_cat_fit.png',
-          () => {},
-          undefined,
-          () => setStatus('โหลดภาพ face_texture_cat_fit.png ไม่สำเร็จ', true)
-        );
-        faceMesh.material.map = texture;
-        faceMesh.material.transparent = true;
-        faceMesh.material.needsUpdate = true;
-        scene.add(faceMesh);
-
-        setStatus('3/4 กำลังขอใช้กล้อง... กรุณากด Allow');
-        await mindarThree.start();
-
-        setStatus('4/4 เปิดกล้องแล้ว หันหน้าเข้าหากล้อง');
-        setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
-
-        renderer.setAnimationLoop(() => {
-          renderer.render(scene, camera);
-        });
-      } catch (err) {
-        setStatus('Error: ' + (err && (err.message || err)), true);
-        console.error(err);
-      }
+      await mindarThree.start();
+      renderer.setAnimationLoop(() => {
+        renderer.render(scene, camera);
+      });
     };
 
     start();
